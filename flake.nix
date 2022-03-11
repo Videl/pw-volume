@@ -11,7 +11,7 @@
   let
     pkgs = import nixpkgs { inherit system; };
     naersk-lib = pkgs.callPackage naersk {};
-  in {
+  in rec {
 
     # `nix build`
     packages.pw-volume = naersk-lib.buildPackage {
