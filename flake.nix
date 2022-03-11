@@ -7,23 +7,35 @@
   };
 
   outputs = { self, nixpkgs, utils, naersk }:
-    utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        naersk-lib = pkgs.callPackage naersk {};
-      in {
+  utils.lib.eachDefaultSystem (system:
+  let
+    pkgs = import nixpkgs { inherit system; };
+    naersk-lib = pkgs.callPackage naersk {};
+  in {
 
-        defaultPackage = naersk-lib.buildPackage ./.;
+    # `nix build`
+    packages.pw-volume = naersk-lib.buildPackage {
+      pname = "pw-volume";
+      root = ./.;
+    };
 
-        defaultApp = utils.lib.mkApp {
-            drv = self.defaultPackage."${system}";
-        };
+    defaultPackage = packages.pw-volume;
 
-        devShell = with pkgs; mkShell {
-          buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy ];
-          RUST_SRC_PATH = rustPlatform.rustLibSrc;
-        };
+    # `nix run`
+    apps.pw-volume = utils.lib.mkApp {
+      drv = packages.pw-volume;
+    };
 
-      });
+    defaultApp = apps.pw-volume;
 
+    # `nix develop`
+    devShell = with pkgs; mkShell {
+      buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy ];
+      RUST_SRC_PATH = rustPlatform.rustLibSrc;
+    };
+
+    nixosModule = { config }: { options = {}; config = {}; };
+
+  });
 }
+
